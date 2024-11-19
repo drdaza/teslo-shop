@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Product {
@@ -44,13 +44,37 @@ export class Product {
     gender: string;
 
 
+    @Column('text', {
+        array: true,
+        default: [],
+    })
+    tags: string[];
+
+
     @BeforeInsert()
     checkSlugInsert() {
+        let newSlugValue = null;
         if (!this.slug) {
-            this.slug = this.title.toLowerCase().replaceAll(' ', '_').replaceAll(`'`, '');
-        } else {
-            this.slug = this.slug.toLowerCase().replaceAll(' ', '_').replaceAll(`'`, '');
+            newSlugValue = this.applySlugRules(this.title);
         }
+        else {
+            newSlugValue = this.applySlugRules(this.slug);
+        }
+        this._setSlug(newSlugValue);
+    }
+
+
+    @BeforeUpdate()
+    checkSlugUpdate() {
+        const newSlugValue = this.applySlugRules(this.slug);
+        this._setSlug(newSlugValue);
+    }
+
+    private _setSlug(slug: string) {
+        this.slug = slug;
+    }
+    private applySlugRules(stringToNormalize: string) {
+        return stringToNormalize.toLowerCase().replaceAll(' ', '_').replaceAll(`'`, '');
     }
     // tags
     // images
