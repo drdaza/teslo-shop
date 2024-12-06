@@ -1,7 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, SetMetadata } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+
 import { AuthService } from './auth.service';
 import { CreateUserDto, LoginUserDto } from './dto';
-import { AuthGuard } from '@nestjs/passport';
+import { User } from './entities/user.entity';
+import { GetUser, GetRawRequestHeaders, RoleProtected, Auth } from './decorators';
+import { UserRoleGuard } from './guards/user-role/user-role.guard';
+import { ValidRoles } from './interfaces';
 
 @Controller('auth')
 export class AuthController {
@@ -19,10 +25,59 @@ export class AuthController {
 
   @Get('test')
   @UseGuards(AuthGuard())
-  testingAuth() {
+  testingAuth(
+    @GetUser('email') userEmail: string,
+    @GetUser() user: User,
+    @GetRawRequestHeaders('authorization') rawHeaders: string
+  ) {
+    
+    
+    
    return {
     ok: true,
-    message: 'auth works!'
+    message: 'auth works!',
+    userEmail,
+    user,
+    rawHeaders
+   }
+  }
+
+  @Get('test2')
+  // @SetMetadata('roles', ['admin'])
+  @RoleProtected(ValidRoles.user)
+  @UseGuards(AuthGuard(), UserRoleGuard)
+  testingAuth2(
+    @GetUser('email') userEmail: string,
+    @GetUser() user: User,
+    @GetRawRequestHeaders('authorization') rawHeaders: string
+  ) {
+    
+    
+    
+   return {
+    ok: true,
+    message: 'auth works!',
+    userEmail,
+    user,
+    rawHeaders
+   }
+  }
+  @Get('test3')
+  @Auth(ValidRoles.admin, ValidRoles.superUser)
+  testingAuth3(
+    @GetUser('email') userEmail: string,
+    @GetUser() user: User,
+    @GetRawRequestHeaders('authorization') rawHeaders: string
+  ) {
+    
+    
+    
+   return {
+    ok: true,
+    message: 'auth works!',
+    userEmail,
+    user,
+    rawHeaders
    }
   }
 
