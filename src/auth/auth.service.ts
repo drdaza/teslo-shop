@@ -1,4 +1,4 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { Get, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
 
@@ -51,12 +51,15 @@ export class AuthService {
       select: { email: true, password: true, id: true }
      });
 
-
-    if (!user) {
+     console.log(user);
+     
+    if (!user) {      
       throw new UnauthorizedException('credentials are invalid');
     }
 
     if (!bcrypt.compareSync(password, user.password)) {
+      console.log(password, user.password);
+      
       throw new UnauthorizedException('credentials are invalid');
     }
 
@@ -66,6 +69,29 @@ export class AuthService {
       ...user, 
       token: this.getJwtToken({ id: user.id })
     };
+  }
+
+
+  async verifyToken(token: string) {
+    try {
+      const tokenVerified = this.jwtService.verify(token);
+      const userId = tokenVerified.id;
+      
+      const user = await this.userRepository.findOne({ 
+        where: { id: userId },
+        select: { email: true, password: true, id: true }
+       });
+      
+      
+
+      return {
+        ...user, 
+        token: this.getJwtToken({ id: user.id })
+      };
+
+    } catch (error) {
+      handleDbExpections(error);
+    }
   }
 
   private getJwtToken(paylopad: JwtPayload) {

@@ -23,6 +23,16 @@ export class AuthController {
     return this.authService.login(loginUserDto);
   }
 
+  @Get('check-token')
+  @Auth()
+  async checkToken(
+    @GetRawRequestHeaders('authorization') rawHeaders: string
+  ) {
+    const token = rawHeaders.split(' ')[1];
+    const userInfo = await this.authService.verifyToken(token);
+    return userInfo;
+  }
+
   @Get('test')
   @UseGuards(AuthGuard())
   testingAuth(
